@@ -1,0 +1,58 @@
+# ============================================================
+# Textbook-RAG-Agent v2 依赖
+# Python 3.11+
+# ============================================================
+
+# ── LangChain 全家桶 ────────────────────────────────────────
+langchain>=0.3.0
+langchain-classic>=0.3.0       # chains: create_retrieval_chain 等
+langchain-community>=0.3.0      # HuggingFaceEmbeddings 等本地模型
+langchain-openai>=0.2.0
+langchain-chroma>=0.2.0
+langchain-text-splitters>=0.3.0
+langchain-core>=0.3.0
+
+# ── PDF 解析 ────────────────────────────────────────────────
+pymupdf4llm>=0.0.17
+
+# ── 向量数据库 ──────────────────────────────────────────────
+chromadb>=0.5.0
+
+# ── 环境配置 ────────────────────────────────────────────────
+python-dotenv>=1.0.0
+
+# ── 进度条 ──────────────────────────────────────────────────
+tqdm>=4.66.0
+
+# ── 重排序 (Cross-Encoder Reranker) ────────────────────────
+sentence-transformers>=2.0,<3.0
+transformers<4.40       # 兼容 torch 2.1.x
+# bge-m3: ~2.2GB 首次下载，1024 维多语言向量
+
+# ── 混合搜索 ────────────────────────────────────────────────
+rank-bm25>=0.2.2
+jieba>=0.42.1
+
+# ── OCR 回退（扫描版 PDF）──────────────────────────────────
+# PaddleOCR 2.x + PaddlePaddle GPU，支持中/英/日
+# PyMuPDF 将 PDF 页渲染为图片，无需 poppler
+# 注意: torch 需单独安装 CUDA 版本，见 run.bat
+paddlepaddle-gpu>=2.6.0,<3.0
+paddleocr>=2.7,<3
+# torch>=2.1.0   # 见下方说明 — 需匹配 CUDA 版本
+numpy<2         # paddlepaddle-gpu 2.6.x 兼容性
+Pillow>=10.0.0
+PyMuPDF>=1.23.0
+
+# ── torch（需匹配 CUDA 版本）───────────────────────────────
+# CUDA 11.8: pip install torch==2.1.0 --index-url https://download.pytorch.org/whl/cu118
+# CUDA 12.1: pip install torch==2.1.0 --index-url https://download.pytorch.org/whl/cu121
+# 注意: 必须和 paddlepaddle-gpu 使用同 CUDA 版本，且 torch>=2.4 与 paddle 的 pybind 冲突
+
+# ── Web UI (Streamlit) ──────────────────────────────────────
+streamlit>=1.31.0
+
+# ── Backend API ────────────────────────────────────────────
+fastapi>=0.115.0
+uvicorn[standard]>=0.30.0
+sse-starlette>=2.1.0

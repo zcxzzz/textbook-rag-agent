@@ -1,0 +1,40 @@
+# 环境配置（含 API Key）
+.env*
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+venv/
+.venv/
+
+# Chroma 持久化数据
+indexes/*
+!indexes/.gitkeep
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# 临时文件
+*.log
+*.tmp
+
+# PDF 源文件（体积大，通常不提交）
+data/
+data/*.pdf
+data/**/*.pdf
+!data/.gitkeep
+
+# Node / Frontend
+frontend/node_modules/
+frontend/dist/
+*.tsbuildinfo
