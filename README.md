@@ -36,7 +36,8 @@ textbook-rag-agent/
 │   │   ├── books.py          # GET /api/books
 │   │   ├── sessions.py       # 会话 CRUD
 │   │   ├── progress.py       # 学习进度 / 薄弱点 / 画像
-│   │   └── chat.py           # POST /api/chat/stream (SSE 流式)
+│   │   ├── chat.py           # POST /api/chat/stream (SSE 流式)
+│   │   └── pages.py           # GET /api/pages/view & /info (PDF 页面渲染)
 │   └── services/
 │       └── app_state.py      # 模块级单例（重型模型共享）
 ├── frontend/                 # React + Vite + Tailwind 前端
@@ -47,7 +48,7 @@ textbook-rag-agent/
 │   │   ├── components/
 │   │   │   ├── LeftSidebar.tsx   # 教材选择 · 会话历史 · 快捷命令
 │   │   │   ├── CenterPanel.tsx   # 聊天消息流 + 输入框
-│   │   │   ├── RightPanel.tsx    # 知识来源面板
+│   │   │   ├── RightPanel.tsx    # 知识来源 + PDF 原文查看器（缩放/拖拽宽）
 │   │   │   ├── ChatMessage.tsx   # 消息气泡（Markdown + 来源引用）
 │   │   │   ├── ChatInput.tsx     # 输入框（Enter 发送 / Shift+Enter 换行）
 │   │   │   └── WelcomeHero.tsx   # 空状态欢迎页
@@ -168,8 +169,10 @@ cd frontend && npm install && npm run dev   # → http://localhost:5173
 - `/resume` 恢复上次对话上下文
 - `/progress` 查看学习进度
 - `/profile` 管理学生画像
+- **自动学习检测** — 每次对话自动提取知识点并记录到学习进度，无需手动操作
 
 关闭记忆：`.env` 中 `MEMORY_ENABLED=false`。
+关闭自动学习检测：`MEMORY_AUTO_LEARNING_DETECTION=false`。
 
 ### RAG 检索流水线
 
@@ -179,6 +182,7 @@ cd frontend && npm install && npm run dev   # → http://localhost:5173
 - **查询扩展**：复杂问题自动拆解为子查询
 - **BM25 混合搜索**：关键词 + 向量语义 + RRF 融合，精确匹配教科书术语
 - **Cross-Encoder 重排序**：BGE Reranker v2 M3 对候选文档重排
+- **GPU 内存优化**：预过滤 30 候选 + 文本截断 800 字符 + 分批 16 预测，降低显存峰值 ~60%
 
 功能开关：
 
@@ -194,11 +198,16 @@ HYBRID_SEARCH_ENABLED=false
 
 ### React 前端特性
 
-- 暗色主题 3 栏布局 (20% | 60-80% | 20%)，左栏可折叠
+- **深色/浅色主题切换** — 右下角一键切换，localStorage 记忆偏好
+- 3 栏布局 (左栏可折叠 | 中间自适应 | 右栏可拖拽调整宽度 240-700px)
 - SSE 流式输出，token-by-token 打字机效果
 - Markdown 渲染 (LaTeX 公式、代码块、表格)
-- 会话历史按 Today / 7 Days / Older 分组
+- 会话历史按 Today / 7 Days / Older 分组，鼠标悬停显示删除按钮
 - 知识来源面板实时展示检索到的教材片段
+- **教材原文查看器** — 点击来源卡片直接渲染 PDF 原页面
+  - 上一页/下一页翻页导航
+  - **图片缩放**：50%-300%，ZoomIn/ZoomOut + 复位按钮，CSS 实时缩放
+  - 智能渲染倍率：缩放越大自动拉取更高清图像
 
 ## 模型切换
 
