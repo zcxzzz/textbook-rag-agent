@@ -1,16 +1,19 @@
 import { useState, useRef, useEffect, KeyboardEvent } from 'react'
 import { Send, Square } from 'lucide-react'
+import { Theme } from '../types'
 
 interface Props {
   onSend: (text: string) => void
   onStop: () => void
   isStreaming: boolean
   disabled?: boolean
+  theme: Theme
 }
 
-export default function ChatInput({ onSend, onStop, isStreaming, disabled }: Props) {
+export default function ChatInput({ onSend, onStop, isStreaming, disabled, theme }: Props) {
   const [text, setText] = useState('')
   const inputRef = useRef<HTMLTextAreaElement>(null)
+  const isDark = theme === 'dark'
 
   useEffect(() => {
     if (!isStreaming && inputRef.current) {
@@ -41,8 +44,13 @@ export default function ChatInput({ onSend, onStop, isStreaming, disabled }: Pro
     }
   }, [text])
 
+  const containerClass = isDark
+    ? 'bg-neutral-900 border-neutral-800 focus-within:border-accent/50'
+    : 'bg-white border-gray-200 focus-within:border-accent/50 shadow-sm'
+  const textClass = isDark ? 'text-white placeholder-neutral-600' : 'text-gray-900 placeholder-gray-400'
+
   return (
-    <div className="flex items-end gap-2 bg-neutral-900 border border-neutral-800 rounded-2xl px-4 py-3 focus-within:border-accent/50 transition-colors">
+    <div className={`flex items-end gap-2 border rounded-2xl px-4 py-3 transition-colors ${containerClass}`}>
       <textarea
         ref={inputRef}
         value={text}
@@ -51,8 +59,7 @@ export default function ChatInput({ onSend, onStop, isStreaming, disabled }: Pro
         placeholder="向导师提问，或使用 / 命令…"
         rows={1}
         disabled={disabled}
-        className="flex-1 bg-transparent text-sm text-white placeholder-neutral-600
-          resize-none outline-none max-h-40"
+        className={`flex-1 bg-transparent text-sm resize-none outline-none max-h-40 ${textClass}`}
       />
       {isStreaming ? (
         <button

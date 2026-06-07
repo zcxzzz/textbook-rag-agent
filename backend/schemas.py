@@ -55,7 +55,9 @@ class Message(BaseModel):
     role: str
     content: str
 
-
+class Result(BaseModel):
+    status: str
+    message: str
 # ── Progress ──────────────────────────────────────────────────
 
 class LearningRecord(BaseModel):

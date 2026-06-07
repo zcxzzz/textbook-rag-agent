@@ -472,14 +472,33 @@ def _auto_detect_learning(agent_memory, session_id: str, book_name: str,
             r'讲解(.{2,20}?)[。]',
             r'(?:概念|定义|定理)[：:]\s*(.{2,20})',
         ]
+        topic = None
         for pattern in patterns:
             m = re.search(pattern, question)
             if m:
                 topic = m.group(1).strip()[:80]
-                agent_memory.record_learning(
-                    session_id, book_name, "自动检测", topic, 1
-                )
                 break
+        # 没匹配到模式就用提问本身作为 topic
+        if not topic:
+            clean = question.strip()
+            # 去掉常见问句前缀
+            for prefix in ['请问', '问一下', '我想知道', '告诉我', '解释一下']:
+                if clean.startswith(prefix):
+                    clean = clean[len(prefix):]
+            topic = clean.strip()[:80]
+        if topic:
+            # 尝试提取章节号
+            chapter = "自动检测"
+            ch_m = re.search(r'第\s*(\d+)\s*课', question)
+            if ch_m:
+                chapter = f"第{ch_m.group(1)}课"
+            else:
+                ch_m = re.search(r'第\s*(\d+)\s*章', question)
+                if ch_m:
+                    chapter = f"第{ch_m.group(1)}章"
+            agent_memory.record_learning(
+                session_id, book_name, chapter, topic, 1
+            )
     except Exception:
         pass
 

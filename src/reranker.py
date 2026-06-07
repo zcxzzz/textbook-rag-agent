@@ -34,16 +34,16 @@ class CrossEncoderReranker:
             logger.info("重排序模型加载完成")
         return self._model
 
-    def rerank(self, query: str, documents: list, top_k: int = 8) -> list:
+    def rerank(self, query: str, documents: list, top_k: int = 8,
+               max_chars: int = 800, batch_size: int = 16) -> list:
         """对文档列表按与查询的相关性重排序。
 
         Args:
             query: 用户查询
             documents: LangChain Document 列表
             top_k: 返回前 k 个文档
-
-        Returns:
-            重排序后的 Document 列表（可能少于输入）
+            max_chars: 每个文档截断到此字符数
+            batch_size: 分批预测大小（降低显存峰值）
         """
         if not documents:
             return []
@@ -51,14 +51,22 @@ class CrossEncoderReranker:
         if len(documents) <= 1:
             return documents
 
-        # 构造 (query, passage) 对
-        pairs = [[query, doc.page_content[:2000]] for doc in documents]
+        # 构造 (query, passage) 对，截断到 max_chars 降低显存
+        pairs = [[query, doc.page_content[:max_chars]] for doc in documents]
 
         try:
-            scores = self.model.predict(
-                pairs,
-                show_progress_bar=False,
-            )
+            scores = []
+            for i in range(0, len(pairs), batch_size):
+                batch = pairs[i : i + batch_size]
+                batch_scores = self.model.predict(
+                    batch,
+                    show_progress_bar=False,
+                )
+                # predict 可能返回单个值或列表
+                if hasattr(batch_scores, '__iter__'):
+                    scores.extend(batch_scores)
+                else:
+                    scores.append(batch_scores)
         except Exception:
             logger.exception("重排序预测失败，返回原始顺序")
             return documents[:top_k]

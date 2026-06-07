@@ -34,9 +34,25 @@ export const api = {
   getSessionHistory: (limit = 20) =>
     request<import('../types').SessionInfo[]>(`/sessions/history?limit=${limit}`),
 
+  deleteSession: (sessionId: string) =>
+    request<{ status: string; message: string }>(
+      `/sessions/${sessionId}`,
+      { method: 'DELETE' }
+    ),
+
   getStats: (bookName?: string | null) =>
     request<import('../types').Stats>(
       `/stats${bookName ? `?book_name=${encodeURIComponent(bookName)}` : ''}`
+    ),
+
+  /** Build URL for a rendered PDF page image. */
+  pageViewUrl: (sourcePath: string, page: number, scale = 1.5) =>
+    `${BASE}/pages/view?source_path=${encodeURIComponent(sourcePath)}&page=${page}&scale=${scale}`,
+
+  /** Get page info (total pages, has_prev/has_next). */
+  getPageInfo: (sourcePath: string, page: number) =>
+    request<import('../types').PageInfo>(
+      `/pages/info?source_path=${encodeURIComponent(sourcePath)}&page=${page}`
     ),
 }
 

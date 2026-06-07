@@ -44,7 +44,13 @@ class AgentMemory:
 
     # ── 会话生命周期 ──────────────────────────────────────
     def create_session(self, book_name: str | None) -> str:
-        """创建新会话，返回 session_id。"""
+        """创建新会话，返回 session_id。自动清理之前的空会话。"""
+        # 清理废弃的空活跃会话（创建了但从未发过消息）
+        self.conn.execute(
+            "DELETE FROM sessions WHERE closed_at IS NULL AND total_messages = 0"
+        )
+        self.conn.commit()
+
         session_id = uuid.uuid4().hex[:16]
         self.conn.execute(
             "INSERT INTO sessions (session_id, book_name) VALUES (?, ?)",
@@ -137,9 +143,9 @@ class AgentMemory:
         return row["summary"] if row and row["summary"] else None
 
     def get_recent_sessions(self, limit: int = 5) -> list[dict]:
-        """获取最近 N 个会话（含活跃和已关闭）。"""
+        """获取最近 N 个有实际内容的会话。隐藏空会话（total_messages = 0）。"""
         rows = self.conn.execute(
-            "SELECT * FROM sessions ORDER BY created_at DESC LIMIT ?",
+            "SELECT * FROM sessions WHERE total_messages > 0 ORDER BY created_at DESC LIMIT ?",
             (limit,),
         ).fetchall()
         return [dict(r) for r in rows]

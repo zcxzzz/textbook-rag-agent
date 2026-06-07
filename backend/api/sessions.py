@@ -1,7 +1,7 @@
 """Session CRUD endpoints."""
 from fastapi import APIRouter, HTTPException
 
-from backend.schemas import CreateSessionRequest, SessionInfo, Message
+from backend.schemas import CreateSessionRequest, SessionInfo, Message, Result
 from backend.services.app_state import memory
 
 router = APIRouter()
@@ -38,6 +38,25 @@ async def resume_session(session_id: str):
     ).fetchone())
     return _row_to_session_info(row)
 
+@router.delete("/sessions/{session_id}", response_model=Result)
+async def delete_session(session_id: str):
+    """Delete a session and all associated data (messages, learning records, quiz history).
+    Weak points and student profiles are preserved (they're book-scoped, not session-scoped).
+    """
+    mem = memory()
+    if not mem:
+        raise HTTPException(status_code=503, detail="Memory system not available")
+
+    row = mem.conn.execute(
+        "SELECT session_id FROM sessions WHERE session_id = ?", (session_id,)
+    ).fetchone()
+    if not row:
+        raise HTTPException(status_code=404, detail="Session not found")
+
+    # Cascade deletes messages, learning_records, quiz_history via FK ON DELETE CASCADE
+    mem.conn.execute("DELETE FROM sessions WHERE session_id = ?", (session_id,))
+    mem.conn.commit()
+    return Result(status="success", message="Session deleted")
 
 @router.get("/sessions/{session_id}/messages", response_model=list[Message])
 async def get_messages(session_id: str, limit: int = 100):

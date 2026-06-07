@@ -153,17 +153,24 @@ def _extract_sources(docs: list) -> list[dict]:
     for doc in docs:
         src = doc.metadata.get("source_file", "")
         heading = doc.metadata.get("heading", "")
-        page = doc.metadata.get("page_label") or doc.metadata.get("page")
-        key = f"{src}|{page}|{heading}"
+        page_raw = doc.metadata.get("page")  # 0-based int
+        page_label = doc.metadata.get("page_label", str(page_raw + 1) if page_raw is not None else "")
+        key = f"{src}|{page_label}|{heading}"
         if key in seen:
             continue
         seen.add(key)
-        entry = {"file": src, "heading": heading}
-        if page is not None:
+        entry = {
+            "file": src,
+            "heading": heading,
+            "book_name": doc.metadata.get("book_name", ""),
+            "source_path": doc.metadata.get("source_path", ""),
+            "page": page_raw if page_raw is not None else 0,
+        }
+        if page_label is not None:
             try:
-                p = int(page)
-                entry["page"] = f"p{p + 1}" if p < 1000 else f"p{p}"
+                p = int(page_label)
+                entry["page_label"] = f"p{p + 1}" if p < 1000 else f"p{p}"
             except (ValueError, TypeError):
-                entry["page"] = f"p{page}"
+                entry["page_label"] = f"p{page_label}"
         sources.append(entry)
     return sources[:5]

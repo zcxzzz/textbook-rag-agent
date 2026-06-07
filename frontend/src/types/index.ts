@@ -1,3 +1,5 @@
+export type Theme = 'dark' | 'light'
+
 export interface ChatMessage {
   id: string
   role: 'user' | 'assistant'
@@ -7,8 +9,25 @@ export interface ChatMessage {
 
 export interface SourceChunk {
   file: string
-  page?: string | null
   heading?: string | null
+  book_name?: string | null
+  source_path?: string | null
+  page: number           // 0-based raw page number from Chroma metadata
+  page_label?: string    // display label like "p42"
+}
+
+export interface PageInfo {
+  page: number
+  total: number
+  has_prev: boolean
+  has_next: boolean
+}
+
+export interface ViewingPage {
+  file: string
+  page: number           // 0-based
+  source_path: string
+  page_label?: string
 }
 
 export interface SessionInfo {

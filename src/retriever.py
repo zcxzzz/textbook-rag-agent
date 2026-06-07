@@ -314,9 +314,10 @@ class EnhancedRetriever:
                     seen.add(key)
                     all_results.append(doc)
 
-        # 重排序
+        # 重排序：先预过滤到 30 控制显存峰值
         if self.reranker and len(all_results) > 1:
-            all_results = self.reranker.rerank(query, all_results, top_k=k * 2)
+            pre_filter = all_results[:30]
+            all_results = self.reranker.rerank(query, pre_filter, top_k=k * 2)
 
         # 截断
         final = all_results[:k]

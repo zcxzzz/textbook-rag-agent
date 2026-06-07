@@ -22,7 +22,7 @@ MEMORY_ENABLED = os.getenv("MEMORY_ENABLED", "true").lower() == "true"
 MEMORY_DB_NAME = os.getenv("MEMORY_DB_NAME", "agent_memory.db")
 MEMORY_DB_PATH = str(INDEXES_DIR / MEMORY_DB_NAME)
 MEMORY_SUMMARY_MAX_MESSAGES = int(os.getenv("MEMORY_SUMMARY_MAX_MESSAGES", "40"))
-MEMORY_AUTO_LEARNING_DETECTION = os.getenv("MEMORY_AUTO_LEARNING_DETECTION", "false").lower() == "true"
+MEMORY_AUTO_LEARNING_DETECTION = os.getenv("MEMORY_AUTO_LEARNING_DETECTION", "true").lower() == "true"
 
 # RAG 检索增强
 RERANK_ENABLED = os.getenv("RERANK_ENABLED", "true").lower() == "true"
