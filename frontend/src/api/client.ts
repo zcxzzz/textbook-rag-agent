@@ -34,11 +34,25 @@ export const api = {
   getSessionHistory: (limit = 20) =>
     request<import('../types').SessionInfo[]>(`/sessions/history?limit=${limit}`),
 
+  closeSession: (sessionId: string) =>
+    request<{ status: string; message: string }>(
+      `/sessions/${sessionId}/close`,
+      { method: 'POST' }
+    ),
+
   deleteSession: (sessionId: string) =>
     request<{ status: string; message: string }>(
       `/sessions/${sessionId}`,
       { method: 'DELETE' }
     ),
+
+  /** Fire-and-forget close via sendBeacon (for beforeunload). */
+  closeSessionBeacon: (sessionId: string) => {
+    navigator.sendBeacon(
+      `${BASE}/sessions/${encodeURIComponent(sessionId)}/close`,
+      new Blob([], { type: 'application/json' }),
+    )
+  },
 
   getStats: (bookName?: string | null) =>
     request<import('../types').Stats>(

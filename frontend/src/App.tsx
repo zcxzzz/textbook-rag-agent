@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { Sun, Moon } from 'lucide-react'
 import LeftSidebar from './components/LeftSidebar'
 import CenterPanel from './components/CenterPanel'
@@ -18,6 +18,7 @@ export default function App() {
   const [loading, setLoading] = useState(true)
   const [sessionRefreshKey, setSessionRefreshKey] = useState(0)
   const [viewingPage, setViewingPage] = useState<ViewingPage | null>(null)
+  const sessionIdRef = useRef(sessionId)
 
   const {
     messages, knowledgeChunks, isStreaming, roundCount,
@@ -27,6 +28,28 @@ export default function App() {
   useEffect(() => {
     localStorage.setItem('theme', theme)
   }, [theme])
+
+  // Keep ref in sync for beforeunload
+  useEffect(() => {
+    sessionIdRef.current = sessionId
+  }, [sessionId])
+
+  // ── Close current session (fire-and-forget, don't block switching) ──
+  const closeCurrentSession = useCallback(() => {
+    if (sessionIdRef.current) {
+      api.closeSession(sessionIdRef.current).catch(() => {})
+    }
+  }, [])
+
+  // ── Page-close: fire-and-forget via sendBeacon ──
+  useEffect(() => {
+    const onUnload = () => {
+      const sid = sessionIdRef.current
+      if (sid) api.closeSessionBeacon(sid)
+    }
+    window.addEventListener('beforeunload', onUnload)
+    return () => window.removeEventListener('beforeunload', onUnload)
+  }, [])
 
   // Initialise: auto-select first book and create session
   useEffect(() => {
@@ -51,6 +74,7 @@ export default function App() {
   }, [])
 
   const handleBookChange = useCallback(async (name: string | null) => {
+    closeCurrentSession()
     setBookName(name)
     try {
       const session = await api.createSession(name)
@@ -58,18 +82,20 @@ export default function App() {
       clearMessages()
       setSessionRefreshKey(k => k + 1)
     } catch {}
-  }, [clearMessages])
+  }, [clearMessages, closeCurrentSession])
 
   const handleNewSession = useCallback(async () => {
+    closeCurrentSession()
     try {
       const session = await api.createSession(bookName)
       setSessionId(session.session_id)
       clearMessages()
       setSessionRefreshKey(k => k + 1)
     } catch {}
-  }, [bookName, clearMessages])
+  }, [bookName, clearMessages, closeCurrentSession])
 
   const handleResumeSession = useCallback(async (id: string) => {
+    closeCurrentSession()
     try {
       const info = await api.resumeSession(id)
       setSessionId(info.session_id)
@@ -77,7 +103,7 @@ export default function App() {
       const msgs = await api.getMessages(id)
       loadMessages(msgs)
     } catch {}
-  }, [loadMessages])
+  }, [loadMessages, closeCurrentSession])
 
   const handleDeleteSession = useCallback(async (id: string) => {
     try {

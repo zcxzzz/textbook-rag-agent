@@ -58,6 +58,23 @@ async def delete_session(session_id: str):
     mem.conn.commit()
     return Result(status="success", message="Session deleted")
 
+@router.post("/sessions/{session_id}/close", response_model=Result)
+async def close_session(session_id: str):
+    """Close a session: count messages, generate summary, mark closed_at."""
+    mem = memory()
+    if not mem:
+        raise HTTPException(status_code=503, detail="Memory system not available")
+
+    row = mem.conn.execute(
+        "SELECT session_id FROM sessions WHERE session_id = ?", (session_id,)
+    ).fetchone()
+    if not row:
+        raise HTTPException(status_code=404, detail="Session not found")
+
+    summary = mem.close_session(session_id)
+    return Result(status="success", message=summary or "Session closed")
+
+
 @router.get("/sessions/{session_id}/messages", response_model=list[Message])
 async def get_messages(session_id: str, limit: int = 100):
     mem = memory()
