@@ -10,6 +10,10 @@
 - **增强检索**：章节感知 + 查询扩展 + Cross-Encoder 重排序 + BM25 混合搜索
 - **多端交互**：CLI 命令行 / Streamlit 轻量 Web / **React + FastAPI 生产级界面**
 
+## 效果预览
+
+<img height="600" src="./preview/preview01.png" width="1700" alt=""/>
+
 ## 项目结构
 
 ```
